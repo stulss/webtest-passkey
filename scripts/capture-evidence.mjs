@@ -21,6 +21,7 @@ const shot = async (page, name) => {
   console.log("  📸 " + name);
 };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const BR2 = String.fromCharCode(10);
 
 // 화면의 버튼/링크를 글자로 찾아 누른다
 async function clickText(page, text) {
@@ -136,6 +137,7 @@ async function main() {
     await sleep(600);
     await page.evaluate(() => window.scrollTo(0, 0));
     await shot(page, "T08-E05-private-items.png");
+    const aItemId = await page.evaluate(async () => (await (await fetch("/api/items")).json()).items[0].id);
 
     // ── ⑥ 두 번째 패스키 (가상 인증기 #2) ────────────────────────────────
     console.log("⑤ 두 번째 패스키 등록 (가상 인증기 #2)");
@@ -190,6 +192,133 @@ async function main() {
       document.querySelector(".msg.err")?.scrollIntoView({ block: "center" })
     );
     await shot(page, "T08-A01c-마지막패스키_삭제거절.png");
+
+    // ── 삭제된(등록 안 된) 패스키로 로그인 시도 → 실패 (C45) ────────────
+    console.log("8) 등록 안 된 패스키로 로그인 시도 -> 실패");
+    {
+      const ctx2 = await browser.createBrowserContext();   // 쿠키 격리
+      const p2 = await ctx2.newPage();
+      const c2 = await p2.createCDPSession();
+      await c2.send("WebAuthn.enable");
+      await c2.send("WebAuthn.addVirtualAuthenticator", {
+        options: { protocol: "ctap2", transport: "nfc", hasResidentKey: true,
+                   hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true },
+      });
+      await p2.goto(APP + "/login", { waitUntil: "networkidle2" });
+      await p2.evaluate(() => {
+        [...document.querySelectorAll("button")]
+          .find((e) => e.textContent.includes("패스키로 로그인")).click();
+      });
+      await p2.waitForFunction(() => document.querySelector(".msg"), { timeout: 30000 }).catch(() => {});
+      await sleep(800);
+      await p2.screenshot({ path: join(OUT, "T08-C45-등록안된패스키_로그인실패.png") });
+      console.log("  [shot] T08-C45-등록안된패스키_로그인실패.png");
+      await p2.close();
+      await ctx2.close();
+    }
+
+    // ── 로그인 없이 비공개 자료 직접 요청 → 401 (C16 / C17) ──────────────
+    console.log("9) 미로그인 API 직접 요청 -> 401");
+    {
+      const ctx3 = await browser.createBrowserContext();   // 세션 없는 상태를 보장
+      const p3 = await ctx3.newPage();
+      const resp = await p3.goto(APP + "/api/items", { waitUntil: "networkidle2" });
+      await p3.evaluate((st) => {
+        const bar = document.createElement("div");
+        bar.style.cssText =
+          "font:15px/1.7 monospace;padding:14px 16px;margin:28px 0 8px;background:#2b1416;color:#ffb3ae;border:1px solid #5a2b2b;border-radius:6px";
+        bar.textContent = "GET /api/items  (쿠키 없음)  →  HTTP " + st;
+        document.body.prepend(bar);
+      }, resp.status());
+      await sleep(300);
+      await p3.screenshot({ path: join(OUT, "T08-C16-미로그인_API_401.png") });
+      console.log("  [shot] T08-C16-미로그인_API_401.png (HTTP " + resp.status() + ")");
+      if (resp.status() !== 401) throw new Error("미로그인 요청이 401 이 아님: " + resp.status());
+      await p3.close();
+      await ctx3.close();
+    }
+
+    // ── 두 번째 자리: 내용이 다르고 서로 안 보인다 (C36 / C37 / C40) ─────
+    console.log("10) 두 번째 비공개 자리 - 다른 내용, 서로 안 보임");
+    {
+      const ctx4 = await browser.createBrowserContext();   // 진짜 다른 자리가 되도록 쿠키 분리
+      const p4 = await ctx4.newPage();
+      const c4 = await p4.createCDPSession();
+      await c4.send("WebAuthn.enable");
+      await c4.send("WebAuthn.addVirtualAuthenticator", {
+        options: { protocol: "ctap2", transport: "usb", hasResidentKey: true,
+                   hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true },
+      });
+      await p4.goto(APP + "/login", { waitUntil: "networkidle2" });
+      await p4.evaluate(() => {
+        const i = document.querySelector("#pk-label");
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+        setter.call(i, "두 번째 자리의 기기");
+        i.dispatchEvent(new Event("input", { bubbles: true }));
+        [...document.querySelectorAll("button")]
+          .find((e) => e.textContent.includes("패스키로 비공개 자리 만들기")).click();
+      });
+      await p4.waitForFunction(() => location.pathname === "/private", { timeout: 30000 });
+      await p4.evaluate(async () => {
+        for (const content of [
+          "B: 읽을 논문 목록 — WebAuthn L3 hints",
+          "B: 사이드 프로젝트 아이디어 3개",
+          "B: 이번 달 배운 것 정리",
+        ]) {
+          await fetch("/api/items", { method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ content }) });
+        }
+      });
+      await p4.reload({ waitUntil: "networkidle2" });
+      await sleep(700);
+      await p4.evaluate(() => window.scrollTo(0, 0));
+      await p4.screenshot({ path: join(OUT, "T08-C36-두번째자리_다른내용.png") });
+      console.log("  [shot] T08-C36-두번째자리_다른내용.png");
+
+      const cross = await p4.evaluate(async (otherId) => {
+        const del = await fetch("/api/items/" + otherId, { method: "DELETE" });
+        const body = await del.text();
+        const mine = await (await fetch("/api/items?user_id=OTHER&owner=OTHER")).json();
+        return { status: del.status, body, count: mine.items.length,
+                 contents: mine.items.map((i) => i.content) };
+      }, aItemId);
+      await writeFile(join(OUT, "T08-C37-자리간_접근시도.txt"), [
+        "# 다른 자리의 항목에 접근 시도 (C37 / C38 / C39 / C40)",
+        "",
+        "자리 B 세션으로 자리 A 의 항목 id 를 지정해 삭제 시도:",
+        "  DELETE /api/items/" + aItemId + "   ->  HTTP " + cross.status + "  " + cross.body,
+        "",
+        "같은 세션으로 주소에 남의 계정을 적어 목록 요청:",
+        "  GET /api/items?user_id=OTHER&owner=OTHER   ->  " + cross.count + "건 (자리 B 의 것만)",
+        ...cross.contents.map((c) => "    - " + c),
+        "",
+        "-> 거절을 만드는 소스: lib/repository/item.ts (첫 인자 spaceId, 소유자 확인 후에만 삭제).",
+        "   spaceId 는 lib/session.ts:getSessionUser() (쿠키 전용) 에서만 온다.",
+      ].join(BR2));
+      console.log("  [txt] T08-C37-자리간_접근시도.txt (DELETE->" + cross.status + ", 목록 " + cross.count + "건)");
+      if (cross.status !== 404 || cross.count !== 3)
+        throw new Error("격리 확인 실패: DELETE=" + cross.status + ", 목록=" + cross.count + "건");
+
+      p4.on("dialog", (d) => d.accept());
+      await p4.evaluate(() => {
+        [...document.querySelectorAll("button")]
+          .find((e) => e.textContent.includes("비공개 자리와 모든 항목 삭제")).click();
+      });
+      await p4.waitForFunction(() => location.pathname === "/login", { timeout: 20000 }).catch(() => {});
+      await p4.close();
+      await ctx4.close();
+    }
+
+    // ── 촬영용 자리 정리 (반복 실행해도 안 쌓이게) ────────────────────────
+    console.log("11) 촬영용 자리 정리");
+    page.on("dialog", (d) => d.accept());
+    await page.evaluate(() => {
+      [...document.querySelectorAll("button")]
+        .find((e) => e.textContent.includes("비공개 자리와 모든 항목 삭제")).click();
+    });
+    await page.waitForFunction(() => location.pathname === "/login", { timeout: 20000 }).catch(() => {});
+    console.log("  [clean] 촬영용 비공개 자리 삭제됨");
 
     console.log("\n완료. docs/evidence/ 확인하세요.");
     console.log("남은 것: T08-E03 (실기기 등록 프롬프트) — 폰에서 직접 촬영");
