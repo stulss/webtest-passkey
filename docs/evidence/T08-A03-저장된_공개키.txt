@@ -1,9 +1,9 @@
 === 저장소에 있는 키 종류 ===
+  challenge:*  3개
   session:*  5개
-  challenge:*  1개
   space:*  4개
-  item:*  3개
   handle:*  1개
+  item:*  3개
   cred:*  1개
 
 비밀번호/해시로 보이는 키: 0개 — 없음
@@ -36,4 +36,6 @@
     → 개인키 d 는 이 레코드에 없다. 인증기 밖으로 나오지 않기 때문이다.
     레코드에 d 필드 존재? 없음
 
-=== 살아 있는 challenge: 0개 (서버가 확인할 때까지 보관, TTL 5분) ===
+=== 살아 있는 challenge: 2개 (서버가 확인할 때까지 보관, TTL 5분) ===
+  challenge:a3c934d8-4298-4384-9b31-aedd79a44443  purpose=register  남은 TTL=296s  challenge 앞 16자=88V0daNiOS9XDKyC…
+  challenge:04274d5d-5957-44ee-9697-eafb54b38516  purpose=register  남은 TTL=295s  challenge 앞 16자=SramUGoGYS5uvgTX…

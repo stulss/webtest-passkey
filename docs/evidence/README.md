@@ -6,6 +6,7 @@
 APP_URL=https://webtest-passkey.vercel.app WEBAUTHN_RP_ID=webtest-passkey.vercel.app   node scripts/verify-webauthn.mjs          # 요청·응답 기록 (*.md, *.json)
 APP_URL=https://webtest-passkey.vercel.app   node scripts/capture-evidence.mjs         # 실제 화면 (*.png) — Chrome + CDP 가상 인증기
 node --env-file=.env.local scripts/show-stored-credential.mjs > docs/evidence/T08-A03-저장된_공개키.txt
+node --env-file=.env.local scripts/render-evidence-views.mjs   # DB·요청응답 표 (*.png)
 ```
 
 `capture-evidence.mjs` 는 촬영용으로 만든 비공개 자리를 끝에 스스로 삭제한다.
@@ -41,6 +42,8 @@ node --env-file=.env.local scripts/show-stored-credential.mjs > docs/evidence/T0
 | `T08-C16-미로그인_API_401.png` | 쿠키 없이 `/api/items` → **HTTP 401** + 본문 | C16, C17 |
 | `T08-C45-등록안된패스키_로그인실패.png` | 서버에 없는 패스키로 로그인 시도 → 실패 안내 | C45 |
 | `T08-C36-두번째자리_다른내용.png` | 두 번째 비공개 자리 — **내용이 다르고 남의 항목은 안 보임** | C13, C36, C40 |
+| `T08-A05-DB저장내용.png` | **서버(Redis)에 저장된 것 전부** — 키 목록·TTL, 패스키 레코드, COSE 해석(kty/alg/crv/x/y), 개인키 `d` 없음, 비밀번호성 키 0개 | C19, C21, C22 |
+| `T08-A06-요청응답기록.png` | **실제 요청·응답** — 미로그인 401/307, challenge 3건 전부 다름, 이미 쓴 challenge 재사용 400 | C16, C17, C20, C27, C28, C31, C33 |
 | `T08-C37-자리간_접근시도.txt` | 자리 B 세션으로 A 의 항목 삭제 시도 → **404**, 스푸핑 쿼리에도 자기 3건만 | C37–C40 |
 
 ## 사람이 직접 찍어야 하는 것 (1장)

@@ -317,7 +317,7 @@ async function main() {
       [...document.querySelectorAll("button")]
         .find((e) => e.textContent.includes("비공개 자리와 모든 항목 삭제")).click();
     });
-    await page.waitForFunction(() => location.pathname === "/login", { timeout: 20000 }).catch(() => {});
+    await page.waitForFunction(() => location.pathname === "/login", { timeout: 20000 });
     console.log("  [clean] 촬영용 비공개 자리 삭제됨");
 
     console.log("\n완료. docs/evidence/ 확인하세요.");
