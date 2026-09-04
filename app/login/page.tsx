@@ -104,9 +104,9 @@ export default function LoginPage() {
 
         {hasPlatform === false && (
           <p className="msg info">
-            이 기기에는 지문·얼굴·PIN 같은 내장 인증기가 없어서 <strong>USB 보안 키</strong>만 제시됩니다.
-            휴대폰으로 이 주소를 열어 등록하거나, Windows 설정 → 계정 → 로그인 옵션에서
-            PIN(Windows Hello)을 먼저 만드세요.
+            이 기기에는 지문·얼굴·PIN 같은 <strong>내장 인증기</strong>가 없습니다. 대신
+            비밀번호 관리자(Google 등)나 휴대폰·보안 키로 저장할 수 있습니다. 이 기기 자체에
+            저장하려면 Windows 설정 → 계정 → 로그인 옵션에서 PIN(Windows Hello)을 먼저 만드세요.
           </p>
         )}
 
