@@ -264,7 +264,11 @@ a, button { color: inherit; }
   padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
   background: var(--bg-elevated-2); font-size: 14px;
   display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2);
+  /* 좁은 화면에서 긴 패스키 이름·항목 텍스트가 넘치지 않게 */
+  overflow-wrap: anywhere;
 }
+.item-list li > span, .passkey-list li > div { min-width: 0; }
+.item-list li .link-btn, .passkey-list li > .link-btn { flex-shrink: 0; }
 .passkey-meta { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
 .link-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 13px; padding: 0; }
 .link-btn.plain { color: var(--accent-strong); }
