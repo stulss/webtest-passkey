@@ -30,6 +30,8 @@ const results = {
   isolation: [],
 };
 const lines = { sig: [], reuse: [], logout: [], iso: [], del: [] };
+const bodies = { register: null, authenticate: null };
+const BR = String.fromCharCode(10);
 
 function jar() {
   const store = new Map();
@@ -132,6 +134,8 @@ async function signatureAndReuse(auth1) {
   const A = jar();
   const reg = await registerPasskey(auth1, A, "검증-자리A-패스키1");
   const okLogin = await loginPasskey(auth1, A);
+  bodies.register = { response: reg.attResp, label: "검증-자리A-패스키1" };
+  bodies.authenticate = { response: okLogin.asseResp };
 
   // 잘못된 서명
   const badJar = jar();
@@ -342,6 +346,40 @@ async function writeEvidence() {
   await writeFile(new URL("미로그인_차단_요청응답.md", OUT),
     md("로그인 없이 비공개 자료 요청 + 로그아웃 뒤 재사용 (C16 / C17 / C18 / C34)", lines.logout) +
     "\n> 세션 값은 <redacted> 로 가렸다.\n");
+  // 등록·로그인 요청 본문 원문 (C23 / C29) — Network 탭 스크린샷 대체
+  const redactHandle = (o) => {
+    const c = structuredClone(o);
+    if (c.response?.response?.userHandle) c.response.response.userHandle = "<redacted>";
+    return c;
+  };
+  await writeFile(new URL("등록_로그인_요청본문.md", OUT), [
+    "# 등록·로그인 요청 본문 원문 (C23 / C29)",
+    "",
+    "브라우저가 서버로 실제로 보내는 것 전부다. 개인키(`d`)는 어디에도 없다 —",
+    "인증기가 만든 키쌍 중 공개키만 `attestationObject` 안에 담겨 나간다.",
+    "",
+    "## POST /api/webauthn/register/verify — 요청 본문",
+    "",
+    "```json",
+    JSON.stringify(redactHandle(bodies.register), null, 2),
+    "```",
+    "",
+    "- 최상위 필드: `response`(id·rawId·type·response·clientExtensionResults) + `label`",
+    "- `response.response` 안: `clientDataJSON`, `attestationObject`, `transports` — **그게 전부**",
+    "- 개인키·시드·비밀번호에 해당하는 필드 없음",
+    "",
+    "## POST /api/webauthn/authenticate/verify — 요청 본문",
+    "",
+    "```json",
+    JSON.stringify(redactHandle(bodies.authenticate), null, 2),
+    "```",
+    "",
+    "- `signature` 는 개인키로 만든 **서명**이지 개인키가 아니다.",
+    "- 서버는 이 서명을 `cred:{id}.publicKey`(저장된 공개키)로 검증한다 → `lib/webauthn.ts:checkAuthentication`",
+    "- `userHandle` 은 이 문서에서 가렸다 (C34).",
+    "",
+  ].join(BR));
+
   await writeFile(new URL("webauthn-verify-results.json", OUT), JSON.stringify(results, null, 2));
 }
 
