@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { registerPasskey, loginWithPasskey, CancelledError } from "../webauthn-client";
 
@@ -12,6 +12,14 @@ export default function LoginPage() {
   const [label, setLabel] = useState(todayLabel());
   const [busy, setBusy] = useState<null | "login" | "register">(null);
   const [msg, setMsg] = useState<{ kind: "err" | "info" | "okmsg"; text: string } | null>(null);
+  // 이 기기에 지문·PIN 같은 내장 인증기가 있는지. 없으면 Windows/브라우저가 USB 보안 키만 제시한다.
+  const [hasPlatform, setHasPlatform] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable?.()
+      .then(setHasPlatform)
+      .catch(() => setHasPlatform(null));
+  }, []);
 
   async function onLogin() {
     setBusy("login");
@@ -93,6 +101,14 @@ export default function LoginPage() {
         </button>
 
         {msg && <p className={`msg ${msg.kind}`}>{msg.text}</p>}
+
+        {hasPlatform === false && (
+          <p className="msg info">
+            이 기기에는 지문·얼굴·PIN 같은 내장 인증기가 없어서 <strong>USB 보안 키</strong>만 제시됩니다.
+            휴대폰으로 이 주소를 열어 등록하거나, Windows 설정 → 계정 → 로그인 옵션에서
+            PIN(Windows Hello)을 먼저 만드세요.
+          </p>
+        )}
 
         <p className="msg info" style={{ marginTop: 24 }}>
           <Link href="/" className="link-btn plain">← 공개 소개로 돌아가기</Link>
