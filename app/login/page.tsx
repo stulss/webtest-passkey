@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { registerPasskey, loginWithPasskey, CancelledError } from "../webauthn-client";
 
@@ -10,7 +9,6 @@ function todayLabel() {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
   const [label, setLabel] = useState(todayLabel());
   const [busy, setBusy] = useState<null | "login" | "register">(null);
   const [msg, setMsg] = useState<{ kind: "err" | "info" | "okmsg"; text: string } | null>(null);
@@ -20,8 +18,9 @@ export default function LoginPage() {
     setMsg(null);
     try {
       await loginWithPasskey();
-      router.replace("/private");
-      router.refresh();
+      // 쿠키를 fetch 응답으로 방금 받았다. 클라이언트 라우터로 넘기면
+      // 라우터 캐시가 이전 상태를 들고 있어 proxy 에서 다시 튕긴다. 전체 로드로 간다.
+      window.location.replace("/private");
     } catch (e) {
       if (e instanceof CancelledError) {
         setMsg({ kind: "info", text: "로그인을 취소했습니다." });
@@ -38,8 +37,9 @@ export default function LoginPage() {
     setMsg(null);
     try {
       await registerPasskey(label.trim() || todayLabel());
-      router.replace("/private");
-      router.refresh();
+      // 쿠키를 fetch 응답으로 방금 받았다. 클라이언트 라우터로 넘기면
+      // 라우터 캐시가 이전 상태를 들고 있어 proxy 에서 다시 튕긴다. 전체 로드로 간다.
+      window.location.replace("/private");
     } catch (e) {
       if (e instanceof CancelledError) {
         setMsg({ kind: "info", text: "등록을 취소했습니다. 저장된 것은 없습니다." });

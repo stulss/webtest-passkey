@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { registerPasskey, logout, CancelledError } from "../webauthn-client";
 
 type Passkey = {
@@ -20,7 +19,6 @@ function credPath(id: string) {
 }
 
 export function PasskeysPanel({ initial }: { initial: Passkey[] }) {
-  const router = useRouter();
   const [keys, setKeys] = useState<Passkey[]>(initial);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "err" | "info" | "okmsg"; text: string } | null>(null);
@@ -75,16 +73,16 @@ export function PasskeysPanel({ initial }: { initial: Passkey[] }) {
 
   async function onLogout() {
     await logout();
-    router.replace("/login");
-    router.refresh();
+    window.location.replace("/login");
   }
 
   async function onDeleteSpace() {
     if (!confirm("이 비공개 자리와 모든 항목·패스키를 영구히 삭제합니다. 되돌릴 수 없습니다. 진행할까요?")) return;
     const res = await fetch("/api/space", { method: "DELETE" });
     if (res.ok) {
-      router.replace("/login");
-      router.refresh();
+      // 쿠키를 fetch 응답으로 방금 받았다. 클라이언트 라우터로 넘기면
+      // 라우터 캐시가 이전 상태를 들고 있어 proxy 에서 다시 튕긴다. 전체 로드로 간다.
+      window.location.replace("/login");
     } else {
       setMsg({ kind: "err", text: "삭제하지 못했습니다." });
     }
