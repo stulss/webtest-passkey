@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [label, setLabel] = useState(todayLabel());
   const [busy, setBusy] = useState<null | "login" | "register">(null);
   const [msg, setMsg] = useState<{ kind: "err" | "info" | "okmsg"; text: string } | null>(null);
-  // 이 기기에 지문·PIN 같은 내장 인증기가 있는지. 없으면 Windows/브라우저가 USB 보안 키만 제시한다.
+  // 이 기기에 지문·PIN 같은 내장 인증기가 있는지. 없으면 비밀번호 관리자·휴대폰·보안 키로 안내한다.
   const [hasPlatform, setHasPlatform] = useState<boolean | null>(null);
 
   useEffect(() => {
