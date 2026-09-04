@@ -15,7 +15,7 @@ export type Item = {
 
 export async function list(spaceId: string): Promise<Item[]> {
   const store = kv();
-  const ids = await store.lrange(K.spaceItems(spaceId), 0, -1);
+  const ids = await store.lrange<string>(K.spaceItems(spaceId), 0, -1);
   if (ids.length === 0) return [];
   const rows = await Promise.all(ids.map((id) => store.get<Item>(K.item(id))));
   // 방어: 혹시라도 소유자가 어긋난 행은 내보내지 않는다.
@@ -51,7 +51,7 @@ export async function remove(spaceId: string, itemId: string): Promise<boolean> 
 
 export async function removeAllForSpace(spaceId: string): Promise<void> {
   const store = kv();
-  const ids = await store.lrange(K.spaceItems(spaceId), 0, -1);
+  const ids = await store.lrange<string>(K.spaceItems(spaceId), 0, -1);
   if (ids.length > 0) await store.del(...ids.map((id) => K.item(id)));
   await store.del(K.spaceItems(spaceId));
 }

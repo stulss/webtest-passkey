@@ -34,3 +34,6 @@ docs/evidence/*.mp4
 
 # windows/git-bash 부산물
 *.stackdump
+
+.vercel
+.env*
