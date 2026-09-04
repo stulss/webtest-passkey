@@ -1,6 +1,6 @@
 // 로컬 개발 전용 인메모리 KV. Upstash 자격증명이 없고 프로덕션이 아닐 때만 쓴다.
-// @upstash/redis 가 실제로 쓰는 메서드의 부분집합만 구현한다.
-// 값은 @upstash/redis 와 같은 방식으로 다룬다: 객체는 그대로 저장/반환(자동 JSON).
+// lib/kv.ts 의 KvLike 가 쓰는 메서드의 부분집합만 구현한다.
+// 값은 객체를 그대로 저장·반환한다(실 Redis 경로의 JSON 직렬화는 lib/kv.ts 어댑터가 담당).
 // 프로세스가 죽으면 사라진다 — 로컬에서 흐름을 눈으로 확인하는 용도.
 
 type Entry = { value: unknown; expireAt: number | null };
