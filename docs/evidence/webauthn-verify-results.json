@@ -1,0 +1,68 @@
+{
+  "app": "http://localhost:3000",
+  "ranAt": "2026-09-04T06:08:07.959Z",
+  "credentials_recorded": false,
+  "session_values_recorded": false,
+  "checks": {
+    "challenge_distinct": {
+      "total": 10,
+      "distinct": 10,
+      "pass": true
+    },
+    "signature_and_reuse": {
+      "register": 201,
+      "login_ok": 200,
+      "login_bad_signature": 401,
+      "reuse_first": 200,
+      "reuse_second": 400,
+      "pass": true
+    },
+    "two_passkeys_delete": {
+      "after_first": 1,
+      "after_second": 2,
+      "delete_first": 200,
+      "login_with_remaining": 200,
+      "login_with_deleted": 400,
+      "delete_last_rejected": 409,
+      "pass": true
+    },
+    "isolation": {
+      "a_delete_b": 404,
+      "b_delete_a": 404,
+      "a_spoof_returned": 3,
+      "counts_unchanged": true,
+      "pass": true
+    },
+    "blocked_and_logout": {
+      "anon_items": 401,
+      "anon_page": 307,
+      "after_logout_replay": 401,
+      "pass": true
+    }
+  },
+  "isolation": [
+    {
+      "direction": "A→B",
+      "request": "DELETE /api/items/{B_item}",
+      "status": 404
+    },
+    {
+      "direction": "B→A",
+      "request": "DELETE /api/items/{A_item}",
+      "status": 404
+    },
+    {
+      "direction": "A spoof query",
+      "status": 200,
+      "returned": 3
+    }
+  ],
+  "summary": {
+    "challenge_distinct": true,
+    "signature_and_reuse": true,
+    "two_passkeys_delete": true,
+    "isolation": true,
+    "blocked_and_logout": true,
+    "all_pass": true
+  }
+}

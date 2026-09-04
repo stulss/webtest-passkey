@@ -1,0 +1,103 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { registerPasskey, loginWithPasskey, CancelledError } from "../webauthn-client";
+
+function todayLabel() {
+  return `내 기기 (${new Date().toISOString().slice(0, 10)})`;
+}
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [label, setLabel] = useState(todayLabel());
+  const [busy, setBusy] = useState<null | "login" | "register">(null);
+  const [msg, setMsg] = useState<{ kind: "err" | "info" | "okmsg"; text: string } | null>(null);
+
+  async function onLogin() {
+    setBusy("login");
+    setMsg(null);
+    try {
+      await loginWithPasskey();
+      router.replace("/private");
+      router.refresh();
+    } catch (e) {
+      if (e instanceof CancelledError) {
+        setMsg({ kind: "info", text: "로그인을 취소했습니다." });
+      } else {
+        setMsg({ kind: "err", text: e instanceof Error ? e.message : "로그인하지 못했습니다." });
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function onRegister() {
+    setBusy("register");
+    setMsg(null);
+    try {
+      await registerPasskey(label.trim() || todayLabel());
+      router.replace("/private");
+      router.refresh();
+    } catch (e) {
+      if (e instanceof CancelledError) {
+        setMsg({ kind: "info", text: "등록을 취소했습니다. 저장된 것은 없습니다." });
+      } else {
+        setMsg({ kind: "err", text: e instanceof Error ? e.message : "등록하지 못했습니다." });
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <h1>비공개 영역</h1>
+        <p>
+          비밀번호는 없습니다. <strong>패스키</strong>로만 들어갑니다. 이미 이 기기(또는 동기화된
+          비밀번호 관리자)에 패스키가 있으면 로그인하고, 없으면 새로 만드세요.
+        </p>
+
+        <button
+          type="button"
+          className="btn btn-primary"
+          style={{ width: "100%" }}
+          onClick={onLogin}
+          disabled={busy !== null}
+        >
+          {busy === "login" ? "패스키 확인 중…" : "패스키로 로그인"}
+        </button>
+
+        <hr className="area-divider" />
+
+        <div className="field">
+          <label htmlFor="pk-label">새로 만들 패스키 이름 (비밀번호 아님)</label>
+          <input
+            id="pk-label"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            maxLength={60}
+            autoComplete="off"
+          />
+        </div>
+        <button
+          type="button"
+          className="btn"
+          style={{ width: "100%" }}
+          onClick={onRegister}
+          disabled={busy !== null}
+        >
+          {busy === "register" ? "등록을 기다리는 중…" : "패스키로 비공개 자리 만들기"}
+        </button>
+
+        {msg && <p className={`msg ${msg.kind}`}>{msg.text}</p>}
+
+        <p className="msg info" style={{ marginTop: 24 }}>
+          <Link href="/" className="link-btn plain">← 공개 소개로 돌아가기</Link>
+        </p>
+      </div>
+    </div>
+  );
+}
