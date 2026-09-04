@@ -31,3 +31,6 @@ yarn-error.log*
 # 증거 캡처 원본 (스크린샷은 docs/evidence/ 아래 커밋, 원본 영상은 제외)
 docs/evidence/*.mov
 docs/evidence/*.mp4
+
+# windows/git-bash 부산물
+*.stackdump
