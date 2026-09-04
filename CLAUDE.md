@@ -18,7 +18,7 @@
 `webtest`(과제 1의 소개 페이지)를 Next.js로 옮기고, `/private` 비공개 영역을 **패스키(WebAuthn)로만**
 잠근다. 비밀번호는 없다. 공개 소개(`/`)는 그대로 누구나 본다.
 
-- 스택: Next.js 16 App Router + `@simplewebauthn` v13 + Vercel KV (Upstash Redis)
+- 스택: Next.js 16 App Router + `@simplewebauthn` v13 + Redis (Vercel Marketplace)
 - 저장소: 관계형 DB 아님. `lib/kv.ts` → `@vercel/kv`. 키 구조는 `docs/01_기획.md` 참조.
 
 ## 과제 8 불변 규칙
@@ -30,7 +30,7 @@
 4. 개인키·세션 원문·user handle을 코드·문서·로그·스크린샷에 남기지 않는다.
 5. 비공개 항목 단건은 `item.spaceId === 세션 spaceId` 확인 후에만 접근·삭제한다. 아니면 404.
 6. 응답은 `lib/dto/` 화이트리스트를 거친다. KV 원본 객체를 그대로 반환하지 않는다.
-7. `NEXT_PUBLIC_*` 금지. `KV_REST_API_*`·`WEBAUTHN_*`는 서버 전용.
+7. `NEXT_PUBLIC_*` 금지. `REDIS_URL`·`WEBAUTHN_*`는 서버 전용.
 8. 회원가입 없음: 패스키를 처음 등록하면 그 사람 몫의 "비공개 자리"가 생긴다. 등록 입력은
    패스키 이름 1칸뿐(비밀 아님).
 9. 소개 페이지 콘텐츠는 **가공(fabricated)** 이며 화면에 그 사실을 고지한다. 실명 외 실제 개인정보 0.

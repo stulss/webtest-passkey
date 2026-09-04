@@ -1,7 +1,7 @@
 # evidence — 증거 색인 (과제 8)
 
 이 폴더의 `*.md` / `*.json` 은 `scripts/verify-webauthn.mjs` 가 실행 중인 서버를 상대로 자동 생성한다.
-`*.png` 는 사람이 시크릿 창·Chrome DevTools·Upstash 콘솔에서 촬영해 넣는다.
+`*.png` 는 사람이 시크릿 창·Chrome DevTools·Redis 콘솔에서 촬영해 넣는다.
 어디에도 세션 원문·KV 토큰·개인키·user handle 원문을 남기지 않는다.
 
 ## 자동 생성 파일
@@ -27,7 +27,7 @@
 | `T08-E05-private-items.png` | 로그인 후 내 비공개 항목 3건 | C13, C14 |
 | `T08-A01-devtools-webauthn.png` | DevTools WebAuthn 탭의 가상 인증기 2개 + credential 목록 | C42, C44 |
 | `T08-A02-network-register-verify.png` | Network 탭 `register/verify` 요청 본문 (attestationObject·clientDataJSON·transports, 개인키 없음) | C23 |
-| `T08-A03-upstash-cred.png` | Upstash 데이터 브라우저의 `cred:*` 값 (COSE 공개키, 비밀번호 아님) | C21, C22 |
+| `T08-A03-redis-cred.png` | Redis 콘솔(Data Browser)의 `cred:*` 값 (COSE 공개키, 비밀번호 아님) | C21, C22 |
 | `T08-A04-network-authenticate.png` | Network 탭 `authenticate/verify` — signature·authenticatorData | C29 |
 
 ## 재현
@@ -36,5 +36,5 @@
 npm run dev                                   # 로컬 (인메모리 KV)
 node scripts/verify-webauthn.mjs              # → 이 폴더의 md/json 갱신
 # 배포본:
-APP_URL=https://<프로덕션> WEBAUTHN_RP_ID=<도메인> node --env-file=.env.local scripts/verify-webauthn.mjs
+APP_URL=https://webtest-passkey.vercel.app WEBAUTHN_RP_ID=webtest-passkey.vercel.app node --env-file=.env.local scripts/verify-webauthn.mjs
 ```

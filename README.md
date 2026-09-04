@@ -17,7 +17,7 @@
 
 ```bash
 npm install
-vercel env pull .env.local      # Vercel KV 자격증명 (KV_REST_API_*)
+vercel env pull .env.local      # Vercel KV 자격증명 (REDIS_URL)
 npm run dev                      # http://localhost:3000
 ```
 
@@ -37,7 +37,7 @@ node --env-file=.env.local scripts/verify-webauthn.mjs
 
 ## 배포
 
-Next.js 기본 빌드로 Vercel 에 배포. Storage 탭에서 **Vercel KV(Upstash Redis)** 통합을 추가하고,
+Next.js 기본 빌드로 Vercel 에 배포. Storage 탭에서 **Vercel KV(Redis)** 통합을 추가하고,
 `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` 을 프로덕션 도메인으로 설정한다. 순서는 `docs/05_배포.md`.
 
 ## 문서
