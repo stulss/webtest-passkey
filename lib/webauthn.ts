@@ -11,6 +11,7 @@ import type {
   AuthenticationResponseJSON,
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
+  PublicKeyCredentialHint,
 } from "@simplewebauthn/server";
 
 // WebAuthn 크립토(COSE/CBOR 파싱, attestation/assertion 검증)는 전부 @simplewebauthn/server 에 위임한다.
@@ -25,6 +26,12 @@ export const expectedOrigin = () =>
 
 const ALGS = [-7, -257]; // ES256, RS256
 
+// 브라우저/OS 에 어떤 인증기를 먼저 제안할지 순서만 알려준다(제한이 아니다).
+// 이게 없으면 Windows 는 allowCredentials 가 빈 usernameless 요청에서 곧장
+// "보안 키를 USB 포트에 삽입하십시오" 로 빠진다.
+// client-device(윈도우 헬로·구글 비밀번호 관리자) → hybrid(폰 QR) → security-key(USB) 순.
+const HINTS: PublicKeyCredentialHint[] = ["client-device", "hybrid", "security-key"];
+
 export type StoredCredentialSummary = {
   credentialId: string; // base64url
   transports: AuthenticatorTransportFuture[];
@@ -36,7 +43,7 @@ export async function buildRegistrationOptions(params: {
   userHandle: Uint8Array;
   exclude: StoredCredentialSummary[];
 }): Promise<PublicKeyCredentialCreationOptionsJSON> {
-  return generateRegistrationOptions({
+  const options = await generateRegistrationOptions({
     rpName: RP_NAME,
     rpID: rpID(),
     userName: "비공개 자리",
@@ -54,6 +61,7 @@ export async function buildRegistrationOptions(params: {
     },
     supportedAlgorithmIDs: ALGS,
   });
+  return { ...options, hints: HINTS };
 }
 
 export async function checkRegistration(params: {
@@ -70,11 +78,12 @@ export async function checkRegistration(params: {
 }
 
 export async function buildAuthenticationOptions(): Promise<PublicKeyCredentialRequestOptionsJSON> {
-  return generateAuthenticationOptions({
+  const options = await generateAuthenticationOptions({
     rpID: rpID(),
     userVerification: "preferred",
     // allowCredentials 생략 → 브라우저가 discoverable 패스키 선택 UI 를 띄운다 (usernameless).
   });
+  return { ...options, hints: HINTS };
 }
 
 export async function checkAuthentication(params: {
