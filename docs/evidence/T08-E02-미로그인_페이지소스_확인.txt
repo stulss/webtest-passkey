@@ -1,0 +1,12 @@
+# 로그인하지 않은 상태에서 받은 것 (C15 / C16 / C17 / C18)
+
+GET https://webtest-passkey.vercel.app/private  →  최종 도착지: https://webtest-passkey.vercel.app/login
+GET https://webtest-passkey.vercel.app/api/items (쿠키 없음)  →  HTTP 401  {"error":"로그인이 필요합니다."}
+
+받은 페이지 소스에서 비공개 항목 텍스트 검색:
+  "회고" 포함? 없음
+  "지원" 포함? 없음
+  "프로젝트 메모" 포함? 없음
+  "비공개 항목" 포함? 없음
+
+페이지 소스 길이: 8160자 (로그인 화면)

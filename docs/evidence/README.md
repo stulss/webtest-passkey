@@ -1,8 +1,14 @@
 # evidence — 증거 색인 (과제 8)
 
-이 폴더의 `*.md` / `*.json` 은 `scripts/verify-webauthn.mjs` 가 실행 중인 서버를 상대로 자동 생성한다.
-`*.png` 는 사람이 시크릿 창·Chrome DevTools·Redis 콘솔에서 촬영해 넣는다.
-어디에도 세션 원문·KV 토큰·개인키·user handle 원문을 남기지 않는다.
+이 폴더는 두 스크립트가 자동으로 채운다. 어디에도 세션 원문·접속 문자열·개인키·user handle 원문을 남기지 않는다.
+
+```bash
+APP_URL=https://webtest-passkey.vercel.app WEBAUTHN_RP_ID=webtest-passkey.vercel.app   node scripts/verify-webauthn.mjs          # 요청·응답 기록 (*.md, *.json)
+APP_URL=https://webtest-passkey.vercel.app   node scripts/capture-evidence.mjs         # 실제 화면 (*.png) — Chrome + CDP 가상 인증기
+node --env-file=.env.local scripts/show-stored-credential.mjs > docs/evidence/T08-A03-저장된_공개키.txt
+```
+
+`capture-evidence.mjs` 는 촬영용으로 만든 비공개 자리를 끝에 스스로 삭제한다.
 
 ## 자동 생성 파일
 
@@ -16,21 +22,31 @@
 | `계정간_격리_요청응답.md` | 자리 A·B 양방향 404, 건수 3→3 불변, 스푸핑 쿼리 무시 | C36–C40 |
 | `미로그인_차단_요청응답.md` | 쿠키 없이 401 / `/private` 307 / 로그아웃 뒤 재사용 401 | C16, C17, C18, C34 |
 
-## 촬영해서 넣을 파일 (사용자)
+| `등록_로그인_요청본문.md` | 등록·로그인 요청 본문 원문 (개인키 없음, 서명만) | C23, C29 |
+| `T08-A03-저장된_공개키.txt` | 서버 저장값 + COSE 해석(kty/alg/crv/x/y) + 비밀번호성 키 0개 | C21, C22 |
+| `T08-E02-미로그인_페이지소스_확인.txt` | `/private`→`/login` 리다이렉트, `/api/items` 401, 소스에 항목 텍스트 0 | C15–C18 |
 
-> 단계별 촬영 순서는 저장소 최상단 [`스크린샷_촬영순서.md`](../../스크린샷_촬영순서.md) 에 있다.
+## 자동 촬영 화면 (`capture-evidence.mjs`)
 
-| 파일명(예) | 무엇을 담나 | 연결 기준 |
+| 파일 | 무엇을 담나 | 연결 기준 |
 |---|---|---|
-| `T08-E01-public-incognito.png` | 시크릿 창에서 연 공개 소개 첫 화면 + "지어낸 내용" 고지 | C10, C11, C12 |
-| `T08-E02-private-redirect.png` | 로그인 없이 `/private` → `/login`, 페이지 소스(Ctrl+U)에 항목 텍스트 없음 | C15, C18 |
-| `T08-E03-register-prompt.png` | 실기기/구글 비밀번호 관리자의 패스키 생성 프롬프트 | C25, C26 |
-| `T08-E04-passkey-list.png` | 비공개 영역의 패스키 목록 — 이름 + 등록 날짜 + 저장 위치 문구 (2개) | C24, C42, C43 |
-| `T08-E05-private-items.png` | 로그인 후 내 비공개 항목 3건 | C13, C14 |
-| `T08-A01-devtools-webauthn.png` | DevTools WebAuthn 탭의 가상 인증기 2개 + credential 목록 | C42, C44 |
-| `T08-A02-network-register-verify.png` | Network 탭 `register/verify` 요청 본문 (attestationObject·clientDataJSON·transports, 개인키 없음) | C23 |
-| `T08-A03-redis-cred.png` | Redis 콘솔(Data Browser)의 `cred:*` 값 (COSE 공개키, 비밀번호 아님) | C21, C22 |
-| `T08-A04-network-authenticate.png` | Network 탭 `authenticate/verify` — signature·authenticatorData | C29 |
+| `T08-E01-public-incognito.png` / `-b.png` | 세션 없이 연 공개 소개 + "지어낸 내용" 고지 | C10, C11, C12 |
+| `T08-E02-private-redirect.png` | 로그인 없이 `/private` → 로그인 화면 (비공개 내용 0) | C15, C18 |
+| `T08-E03b-login-screen.png` | 로그인/등록 화면 — 비밀번호 입력칸 없음 | C35 |
+| `T08-E05-private-items.png` | 로그인 후 비공개 항목 3건 + 공개/비공개 경계 | C13, C14 |
+| `T08-E04-passkey-list.png` | 패스키 2개 — 이름·등록 날짜·저장 위치 문구 | C24, C42, C43 |
+| `T08-A01a-패스키_삭제직후.png` | 하나 삭제 후 1개 남음 | C44 |
+| `T08-A01b-남은패스키로_로그인성공.png` | 삭제한 기기 없이 남은 패스키로 로그인 성공 | C44 |
+| `T08-A01c-마지막패스키_삭제거절.png` | 마지막 패스키 삭제 시도 → 409 안내 | C46 |
+
+## 사람이 직접 찍어야 하는 것 (1장)
+
+| 파일명 | 무엇을 담나 | 연결 기준 |
+|---|---|---|
+| `T08-E03-register-prompt.png` | **휴대폰**에서 구글 비밀번호 관리자 / iCloud 키체인 패스키 생성 프롬프트 | C25, C26 |
+
+가상 인증기는 OS 프롬프트를 띄우지 않으므로 이 한 장만 실기기 촬영이 필요하다.
+단계는 저장소 최상단 [`스크린샷_촬영순서.md`](../../스크린샷_촬영순서.md) 2단계.
 
 ## 재현
 

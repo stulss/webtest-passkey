@@ -1,9 +1,9 @@
 === 저장소에 있는 키 종류 ===
-  challenge:*  1개
   session:*  5개
-  handle:*  1개
+  challenge:*  1개
   space:*  4개
   item:*  3개
+  handle:*  1개
   cred:*  1개
 
 비밀번호/해시로 보이는 키: 0개 — 없음
